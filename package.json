@@ -1,0 +1,48 @@
+{
+  "name": "zodless",
+  "private": false,
+  "version": "0.0.1",
+  "type": "module",
+  "author": {
+    "name": "Andrew Jarrett",
+    "email": "ahrjarrett@gmail.com",
+    "url": "https://github.com/ahrjarrett"
+  },
+  "description": "a zod superset optimized for the \"first-class schema\" use case",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ahrjarrett/zodless.git"
+  },
+  "packageManager": "pnpm@9.1.0",
+  "license": "MIT",
+  "types": "dist/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "files": [
+    "dist/index.d.ts"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "pnpm clean:build && tsup src/index.ts \"!src/**/*.spec.ts\" --format cjs,esm --dts",
+    "changes": "pnpm changeset add",
+    "check": "tsc --noEmit",
+    "ci:version": "pnpm dlx tsx ./bin/version.ts",
+    "ci:publish": "changeset publish",
+    "clean": "pnpm run \"/^check:.*/\"",
+    "clean:build": "rm -rf dist",
+    "clean:deps": "rm -rf dist",
+    "lint": "pnpm check",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@arktype/attest": "^0.7.9",
+    "@changesets/cli": "^2.27.5",
+    "@types/node": "^20.14.0",
+    "any-ts": "^0.45.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  },
+  "peerDependencies": {
+    "zod": "^3.0.0"
+  }
+}
