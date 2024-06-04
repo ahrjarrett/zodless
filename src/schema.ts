@@ -669,7 +669,6 @@ namespace z {
   z.defaultErrorMap = defaultErrorMap
   z.getErrorMap = getErrorMap
   z.getParsedType = getParsedType
-  z.intersection = intersection_
   z.isAborted = isAborted
   z.isAsync = isAsync
   z.isDirty = isDirty
@@ -838,7 +837,7 @@ function enum_
 namespace enum_ {
   export const is
     : <T extends nonempty.mut.array<string>>(u: unknown) => u is ZodEnum<T>
-    = (u): u is never => hasTypeName(u, ZodTag.ZodVoid)
+    = (u): u is never => hasTypeName(u, ZodTag.ZodEnum)
 }
 
 
