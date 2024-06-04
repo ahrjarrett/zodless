@@ -207,7 +207,6 @@ export namespace JsonSchema {
       fn.flow(
         z.discriminatedUnion.get,
         map(continuation),
-        x => x,
         object.bind("oneOf"),
       )
 
