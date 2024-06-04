@@ -1,3 +1,5 @@
+import { array, fn, map, object } from "./util.js"
+
 import type {
   AnyZodObject,
   AnyZodTuple,
@@ -267,7 +269,7 @@ import type { any, mut, nonempty } from "any-ts"
 
 export { z }
 
-const Tags = array.of(
+const Tags = array.let(
   "optional",
   "readonly",
   "record",
@@ -306,9 +308,9 @@ const Tags = array.of(
   "promise",
   "set",
 )
-export const Tag = object.fromKeys(Tags)
+const Tag = object.fromKeys(Tags)
 //           ^?
-export type Tag = typeof Tag[keyof typeof Tag]
+type Tag = typeof Tag[keyof typeof Tag]
 //           ^?
 
 type ZodTag = typeof ZodTag[keyof typeof ZodTag]
@@ -381,9 +383,9 @@ const ZodTag = ZodFirstPartyTypeKind
 // } as const satisfies Record<keyof typeof ZodTag, any>
 
 
-export type zodKindByType = typeof zodKindByType
+type zodKindByType = typeof zodKindByType
 //           ^?
-export const zodKindByType = {
+const zodKindByType = {
   [Tag.bigint]: ZodTag.ZodBigInt,
   [Tag.boolean]: ZodTag.ZodBoolean,
   [Tag.readonly]: ZodTag.ZodReadonly,
@@ -463,7 +465,6 @@ namespace intersection_ {
     : <R extends z.any, L extends z.any>(schema: z.intersection<L, R>) => R
     = (schema) => schema._def.right
 }
-
 
 declare namespace z {
   export type {
@@ -614,6 +615,8 @@ declare namespace z {
     array_ as array,
     bigint_ as bigint,
     boolean_ as boolean,
+    discriminatedUnion_ as discriminatedUnion,
+    discriminatedUnion_ as disjoint,
     effect_ as effect,
     enum_ as enum,
     intersection_ as intersection,
@@ -623,6 +626,7 @@ declare namespace z {
     null_ as null,
     object_ as object,
     optional_ as optional,
+    readonly_ as readonly,
     record_ as record,
     string_ as string,
     tuple_ as tuple,
@@ -643,7 +647,6 @@ declare namespace z {
     date,
     defaultErrorMap,
     deoptional,
-    discriminatedUnion,
     getErrorMap,
     getParsedType,
     infer,
@@ -690,6 +693,8 @@ namespace z {
   z.array = array_
   z.boolean = boolean_
   z.bigint = bigint_
+  z.discriminatedUnion = discriminatedUnion_
+  z.disjoint = discriminatedUnion_
   z.effect = effect_
   z.enum = enum_
   z.intersection = intersection_
@@ -699,6 +704,7 @@ namespace z {
   z.number = number_
   z.object = object_
   z.optional = optional_
+  z.readonly = readonly_
   z.record = record_
   z.string = string_
   z.tuple = tuple_
@@ -722,7 +728,6 @@ namespace z {
   z.custom = custom
   z.date = date
   z.defaultErrorMap = defaultErrorMap
-  z.discriminatedUnion = discriminatedUnion
   z.getErrorMap = getErrorMap
   z.getParsedType = getParsedType
   z.intersection = intersection
@@ -789,6 +794,8 @@ declare namespace any_ {
   export type array<type extends ZodArray<any> = ZodArray<any>> = type
   export type tuple<type extends AnyZodTuple = AnyZodTuple> = type
   export type union<type extends z.union.new = z.union.new> = type
+  export type shape<type extends ZodRawShape = ZodRawShape> = type
+  export type key<type extends KeySchema = KeySchema> = type
   export type intersection<
     type extends
     | z.new.intersection
@@ -813,6 +820,12 @@ declare namespace any_ {
     | z.object<{}>
   // | z.array
   > = type
+  export type set<
+    discriminator extends string = string,
+    type extends
+    | nonempty.mut.array<Z.ZodDiscriminatedUnionOption<discriminator>>
+    = nonempty.mut.array<Z.ZodDiscriminatedUnionOption<discriminator>>
+  > = type
   export type items<
     type extends
     | [] | nonempty.mut.array<z.any>
@@ -823,19 +836,17 @@ declare namespace any_ {
     | [z.any, z.any, ...z.any[]]
     = [z.any, z.any, ...z.any[]]
   > = type
-  export type shape<type extends ZodRawShape = ZodRawShape> = type
-  export type key<type extends KeySchema = KeySchema> = type
 }
 
-export type hasTypeName<typeName extends Tag = Tag> = never | { _def: { typeName: typeName } }
-export function hasTypeName(u: unknown): u is hasTypeName
-export function hasTypeName<name extends string>(u: unknown, typeName: name): u is hasTypeName<name & Tag>
-export function hasTypeName<const names extends any.strings>(
+type hasTypeName<typeName extends z.tag = z.tag> = never | { _def: { typeName: typeName } }
+function hasTypeName(u: unknown): u is hasTypeName
+function hasTypeName<name extends string>(u: unknown, typeName: name): u is hasTypeName<name & z.tag>
+function hasTypeName<const names extends any.strings>(
   u: unknown,
   ...typeNames: names
-): u is hasTypeName<names[number] & Tag>
+): u is hasTypeName<names[number] & z.tag>
 // impl.
-export function hasTypeName(u: unknown, ...typeNames: any.strings): u is never {
+function hasTypeName(u: unknown, ...typeNames: any.strings): u is never {
   return (
     typeof u === "object" &&
     u !== null &&
@@ -849,7 +860,7 @@ export function hasTypeName(u: unknown, ...typeNames: any.strings): u is never {
 }
 
 const getTypeName
-  : <S extends { _def: { typeName: keyof typeof Tag } }>(schema: S) => S["_def"]["typeName"]
+  : <T extends z.tag>(schema: hasTypeName<T>) => T
   = (schema) => schema._def.typeName
 
 const softGetTypeName
@@ -857,8 +868,6 @@ const softGetTypeName
   = (u) => typeof u === "object" && u !== null
     ? (hasTypeName(u) ? getTypeName(u) : void 0)
     : void 0
-
-const UNIMPLEMENTED = { type: "UNIMPLEMENTED", children: "UNIMPLEMENTED" } as const
 
 namespace Guard {
   export const fromSchema
@@ -966,8 +975,7 @@ declare namespace string_ {
   )
 }
 
-// <Key extends ZodTypeAny = ZodTypeAny, Value extends ZodTypeAny = ZodTypeAny>(keyType: Key, valueType: Value, params?: RawCreateParams) => ZodMap<Key, Value>
-
+type map_ = never | ZodMap
 function map_<K extends z.any = z.any, V extends z.any = z.any>(keyType: K, valueType: V, params?: RawCreateParams): ZodMap<K, V> {
   return Z.map(keyType, valueType, params)
 }
@@ -1004,8 +1012,7 @@ namespace unknown_ {
 }
 
 type optional_<schema extends z.any = z.any> = ZodOptional<schema>
-function optional_
-  <S extends z.any>(type: S, params?: RawCreateParams): ZodOptional<S> { return Z.optional(type, params) }
+function optional_<S extends z.any>(type: S, params?: RawCreateParams): ZodOptional<S> { return Z.optional(type, params) }
 declare namespace optional_ {
   type get<type extends z.optional> = type["_def"]["innerType"]
 }
@@ -1015,9 +1022,23 @@ namespace optional_ {
     hasTypeName(u, ZodTag.ZodOptional)
 }
 
+type readonly_<schema extends z.any = z.any> = ZodReadonly<schema>
+function readonly_<S extends z.any>(type: S): ZodReadonly<S> { return type.readonly() }
+declare namespace readonly_ {
+  type get<type extends z.readonly> = type["_def"]["innerType"]
+}
+namespace readonly_ {
+  export const get
+    : <T extends z.any>(type: z.readonly<T>) => T
+    = (type) => type._def.innerType
+  export const is
+    : <T extends z.any>(u: unknown) => u is z.readonly<T>
+    = (u): u is never => hasTypeName(u, ZodTag.ZodReadonly)
+}
+
 type tuple_<items extends z.any.items = z.any.items> = ZodTuple<items, null>
 function tuple_
-  <SS extends z.any.items>(schemas: SS, params?: RawCreateParams): z.tuple<SS> { return Z.tuple(schemas, params) }
+  <S extends z.any.items>(schemas: S, params?: RawCreateParams): z.tuple<S> { return Z.tuple(schemas, params) }
 namespace tuple_ {
   export const get: <T extends z.any.items>(t: ZodTuple<T>) => T = (xs) => xs._def.items
   export const is: <T extends z.any.items>(u: unknown) => u is ZodTuple<T> = (u): u is never =>
@@ -1041,6 +1062,8 @@ function record_(
 }
 declare namespace record_ {
   export { new_ as new }
+  export { any_ as any }
+  export type any_ = ZodRecord<z.any.key, z.any>
   export type new_ = ZodRecord<ZodString, z.any>
   export type get<type extends z.record> = type["valueSchema"]["_type"]
   export type getIndex<type extends z.record> = type["keySchema"]["_type"]
@@ -1112,6 +1135,34 @@ namespace union_ {
     = (u): u is never => hasTypeName(u, ZodTag.ZodUnion)
 }
 
+type discriminatedUnion_<
+  discriminator extends string = string,
+  set extends z.any.set<discriminator> = z.any.set<discriminator>
+> = never | ZodDiscriminatedUnion<discriminator, set>
+function discriminatedUnion_
+  <D extends string, Set extends z.any.set<D>>(discriminator: D, options: Set, params?: RawCreateParams) { return Z.discriminatedUnion(discriminator, options, params) }
+declare namespace discriminatedUnion_ {
+  type get<type extends z.discriminatedUnion<disc>, disc extends string = string> = type["_def"]["options"]
+  type getDiscriminator<type extends z.discriminatedUnion> = type["_def"]["discriminator"]
+  /** TODO: does it make sense to support `z.discriminatedUnion.getMap`? */
+  // type getMap<type extends z.discriminatedUnion<disc>, disc extends string = string> = type["_def"]["optionsMap"]
+}
+namespace discriminatedUnion_ {
+  export const get
+    : <D extends string, S extends z.any.set<D>>(schema: z.discriminatedUnion<D, S>) => S
+    = (schema) => schema._def.options
+  export const getDiscriminator
+    : <D extends string, S extends z.any.set<D>>(schema: z.discriminatedUnion<D, S>) => D
+    = (schema) => schema._def.discriminator
+  export const is
+    : <D extends string, S extends z.any.set<D>>(u: unknown) => u is z.discriminatedUnion<D, S>
+    = (u): u is never => hasTypeName(u, ZodTag.ZodDiscriminatedUnion)
+  /** TODO: does it make sense to support `z.discriminatedUnion.getMap`? */
+  // export const getMap
+  //   : <D extends string, S extends z.any.set<D>>(schema: z.discriminatedUnion<D, S>) => S
+  //   = (schema) => schema._def.optionsMap
+}
+
 type literal_<primitive extends any.primitive = any.primitive> = never | ZodLiteral<primitive>
 function literal_<V extends any.primitive>(value: V, params?: RawCreateParams): ZodLiteral<V> { return Z.literal(value, params) }
 declare namespace literal_ {
@@ -1122,7 +1173,6 @@ namespace literal_ {
     : <V extends any.primitive>(schema: z.literal<V>) => V
     = (schema) => schema.value
 
-  ///handlerMap[ZodTag.ZodLiteral].children
   export const is
     : <V extends string | number | boolean | null | undefined | bigint>(u: unknown) => u is ZodLiteral<V>
     = (u): u is never => hasTypeName(u, ZodTag.ZodLiteral)
@@ -1191,36 +1241,21 @@ type primitive<
 
 function primitive() { }
 namespace primitive {
-  export const is = (u: object): u is z.any.primitive => hasTypeName(u, ...primitiveTypeNames)
+  export const is = (u: object): u is z.primitive => hasTypeName(u, ...primitiveTypeNames)
 }
 
 ////////////////////
 /// interpreters ///
-const typeof_ = (primitive: any.showable) => primitive === null ? "null" as const : ({
-  boolean: "boolean",
-  number: "number",
-  string: "string",
-  undefined: "null",
-  bigint: "integer",
-  symbol: fn.identity(primitive),
-  object: fn.identity(primitive),
-  function: fn.identity(primitive),
-  // symbol: fn.throw("`jsonSchema.typeof` does not support symbols"),
-  // object: fn.throw("`jsonSchema.typeof` does not support objects"),
-  // function: fn.throw("`jsonSchema.typeof` does not support functions"),
-} as const)[typeof primitive]
 
 function jsonSchema() { }
 declare namespace jsonSchema {
-  export { typeof_ as typeof }
 }
 namespace jsonSchema {
-  jsonSchema.typeof = typeof_
   export const zodLeafTags = [
-    ZodTag.ZodString,
-    ZodTag.ZodNumber,
-    ZodTag.ZodBoolean,
-    ZodTag.ZodNull,
+    z.tag.ZodString,
+    z.tag.ZodNumber,
+    z.tag.ZodBoolean,
+    z.tag.ZodNull,
   ] as const
   export const isZodLeafTag = array.includes(zodLeafTags)
   export const leafTags = [
@@ -1232,59 +1267,188 @@ namespace jsonSchema {
   export const isLeafTag = array.includes(leafTags)
 }
 
+namespace JsonSchema {
+  export type Tag = typeof Tag[keyof typeof Tag]
+  export const Tag = {
+    Number: "number",
+    Integer: "integer",
+    Object: "object",
+    Array: "array",
+    String: "string",
+    Boolean: "boolean",
+    Null: "null",
+  } as const
+
+  export namespace Numeric {
+    export type Node = Numeric.Number | Numeric.Integer
+    export interface Integer extends Numeric.Base { type: "integer" }
+    export interface Number extends Numeric.Base { type: "number" }
+    export interface Base {
+      minimum?: number
+      exclusiveMinimum?: number
+      maximum?: number
+      exclusiveMaximum?: number
+      multipleOf?: number
+    };
+  }
+
+  export namespace String {
+    export interface Node {
+      type: "string";
+      minLength?: number;
+      maxLength?: number;
+      format?: Format
+      pattern?: string;
+      allOf?: { pattern: string }[]
+      anyOf?: { format: string }[]
+      contentEncoding?: string
+    }
+    export type Format = typeof Format[keyof typeof Format]
+    export const Format = {
+      Email: "email",
+      IdnEmail: "idn-email",
+      URI: "uri",
+      UUID: "uuid",
+      DateTime: "date-time",
+      IPv4: "ipv4",
+      IPv6: "ipv6",
+      Date: "date",
+      Time: "time",
+      Duration: "duration",
+    } as const
+    export const format = (checks: array.indexOf.nonfinite<"kind", Z.ZodStringCheck[]>) => {
+      switch (true) {
+        case globalThis.Boolean(checks.email): return { format: Format.Email }
+        case globalThis.Boolean(checks.url): return { format: Format.URI }
+        case globalThis.Boolean(checks.uuid): return { format: Format.UUID }
+        case globalThis.Boolean(checks.datetime): return { format: Format.DateTime }
+        case globalThis.Boolean(checks.date): return { format: Format.Date }
+        case globalThis.Boolean(checks.time): return { format: Format.Time }
+        case globalThis.Boolean(checks.duration): return { format: Format.Duration }
+        case globalThis.Boolean(checks.ip): return { format: checks.ip?.version === "v6" ? Format.IPv6 : Format.IPv4 }
+        default: return null
+      }
+    }
+  }
+  export namespace Const {
+    const typeOf
+      : (value: any.primitive) => "string" | "number" | "bigint" | "boolean" | "symbol" | "null"
+      = (value: any.primitive) => value == null ? "null"
+        : ["object", "function"].includes(typeof value) ? fn.throw("`Const.typeOf` expected a primitive value, got: ", value)
+          : typeof value as never
+
+    export const type = (schema: z.literal) => typeOf(schema.value)
+  }
+
+  export const fromNullCodec = (_schema: z.null) => ({ type: Tag.Null })
+  export const fromUndefinedCodec = (_schema: z.undefined) => ({ type: Tag.Null })
+  export const fromBooleanCodec = (_schema: z.boolean) => ({ type: Tag.Boolean })
+  export const fromLiteralCodec = (schema: z.literal) => ({ type: JsonSchema.Const.type(schema), const: z.literal.get(schema) })
+
+  export const fromStringCodec = (schema: z.string): JsonSchema.String.Node => fn.pipe(
+    array.indexOf("kind")(schema._def.checks),
+    (checks) => ({
+      type: Tag.String,
+      ...(JsonSchema.String.format(checks) ?? {}),
+      ...(checks.min && { minLength: checks.min.value }),
+      ...(checks.max && { maxLength: checks.max.value }),
+      /** TODO: figure out how you want to parse a RegExp into a string */
+      // ...(checks.regex && { pattern: checks.regex.regex })
+    }),
+  )
+
+  export const fromNumberCodec
+    : (schema: z.number) => JsonSchema.Numeric.Node
+    = (schema) => fn.pipe(
+      array.indexOf("kind")(schema._def.checks),
+      ({ int, max, min, multipleOf }) => ({
+        type: int ? Tag.Integer : Tag.Number,
+        ...(min && (min.inclusive ? { minimum: min.value } : { exclusiveMinimum: min.value })),
+        ...(max && (max.inclusive ? { maximum: max.value } : { exclusiveMaximum: max.value })),
+        ...(multipleOf && { multipleOf: multipleOf.value }),
+      }),
+    )
+}
+
+
 function toJsonSchema<S extends z.any>(schema: S): {} {
   const loop = fn.loop<z.any, {}>((s, loop) => {
-    const typeName: ZodTag = getTypeName(s)
-    const tag = adaptor[typeName]
+    const tag = adaptor[getTypeName(s)]
     switch (true) {
-      case jsonSchema.isLeafTag(tag): return { type: tag }
-      case Tag.optional === tag && z.optional.is(s):
-        return fn.pipe(
-          z.optional.get(s),
-          loop,
-        )
-      case Tag.literal === tag && z.literal.is(s):
-        return fn.pipe(
-          z.literal.get(s),
-          (value) => ({ const: value, type: jsonSchema.typeof(value) })
-        )
-      case Tag.array === tag && z.array.is(s):
-        return fn.pipe(
-          z.array.get(s),
-          loop,
-          (items) => ({ items, type: Tag.array }),
-        )
-      case Tag.intersection === tag && isIntersection(s):
-        return fn.pipe(
-          getBoth(s),
-          map(loop),
-          (both) => ({ allOf: both })
-        )
-      case Tag.union === tag && z.union.is(s):
+      case z.number.is(s): return JsonSchema.fromNumberCodec(s)
+      case z.string.is(s): return JsonSchema.fromStringCodec(s)
+      case z.boolean.is(s): return JsonSchema.fromBooleanCodec(s)
+      case z.null.is(s): return JsonSchema.fromNullCodec(s)
+      case z.undefined.is(s): return JsonSchema.fromUndefinedCodec(s)
+      case z.literal.is(s): return JsonSchema.fromLiteralCodec(s)
+      case z.optional.is(s): return fn.pipe(z.optional.get(s), loop)
+      case z.readonly.is(s): return fn.pipe(z.readonly.get(s), loop)
+      case z.union.is(s):
         return fn.pipe(
           z.union.get(s),
           map(loop),
-          (options) => ({ anyOf: options }),
+          object.bind("anyOf"),
         )
-      case Tag.tuple === tag && z.tuple.is(s):
+      case isIntersection(s):
+        return fn.pipe(
+          getBoth(s),
+          map(loop),
+          object.bind("allOf"),
+        )
+      case z.discriminatedUnion.is(s):
+        return fn.pipe(
+          z.discriminatedUnion.get(s),
+          map(loop),
+          object.bind("oneOf"),
+        )
+      case z.record.is(s):
+        return fn.pipe(
+          ({ type: JsonSchema.Tag.Object }),
+          object.upsert("additionalProperties")(
+            fn.pipe(
+              z.record.get(s),
+              loop,
+            )
+          ),
+        )
+      case z.array.is(s):
+        return fn.pipe(
+          ({ type: JsonSchema.Tag.Array }),
+          object.upsert("items")(
+            fn.pipe(
+              z.array.get(s),
+              loop,
+            )
+          ),
+        )
+      case z.tuple.is(s):
         return fn.pipe(
           z.tuple.get(s),
           map(loop),
-          (items) => ({ items, type: "array" }),
+          object.bind("items"),
+          object.upsert("type")(JsonSchema.Tag.Array),
         )
-      case Tag.object === tag && z.object.is(s):
+      case z.object.is(s):
         return fn.pipe(
           z.object.get(s),
           map(loop),
           (properties) => ({
             properties,
-            type: Tag.object,
-            required: object
-              .keys(s.shape)
-              .filter(k => z.typeName.get(s.shape[k]) !== ZodTag.ZodOptional)
+            required: fn.pipe(
+              z.object.get(s),
+              object.filter(
+                fn.flow(
+                  z.typeName.get,
+                  (name) => name !== z.tag.ZodOptional,
+                )
+              ),
+              object.keys,
+            )
           }),
+          object.upsert("type")(JsonSchema.Tag.Object),
         )
-      default: return fn.throw("Schema type unsupported: ", { tag: tag, schema: s })
+      default:
+        return fn.throw("Schema type unsupported: ", { tag: tag, schema: s })
     }
   })
   return loop(schema)
@@ -1298,6 +1462,7 @@ declare namespace reify {
     : [type] extends [z.unknown] ? [TAG: typeof Tag.unknown]
     : [type] extends [z.literal] ? [TAG: typeof Tag.literal, VALUE: z.literal.get<type>]
     : [type] extends [z.optional] ? [TAG: typeof Tag.optional, INNER_TYPE: go<z.optional.get<type>>]
+    : [type] extends [z.readonly] ? [TAG: typeof Tag.readonly, INNER_TYPE: go<z.readonly.get<type>>]
     : [type] extends [z.array] ? [TAG: typeof Tag.array, ELEMENTS: go<z.array.get<type>>]
     : [type] extends [z.record] ? [TAG: typeof Tag.record, KEY: z.record.getIndex<type>, VALUE: go<z.record.get<type>>]
     : [type] extends [z.object] ? [TAG: typeof Tag.object, PROPERTIES: { [k in keyof type["shape"]]: go<type["shape"][k]> }]
@@ -1313,7 +1478,7 @@ declare namespace reify {
 
 function reify<const T extends z.any>(schema: T): reify<T>
 function reify<const T extends z.any>(schema: T) {
-  const go = fn.loop<z.any, unknown>((s, k) => {
+  const loop = fn.loop<z.any, unknown>((s, loop) => {
     const typeName: ZodTag = getTypeName(s)
     const tag = adaptor[typeName]
     const wrap = (u: unknown) => [tag, u] as const
@@ -1329,40 +1494,50 @@ function reify<const T extends z.any>(schema: T) {
       case Tag.undefined: return [tag]
       case Tag.unknown: return [tag]
       case Tag.array:
-        return !z.array.is(s) ? fn.throw("In `reify`, expected an array schema, got:", s) : fn.pipe(
-          s.element,
-          k,
-          wrap,
-        )
+        return !z.array.is(s)
+          ? fn.throw("In `reify`, expected an array schema, got:", s)
+          : fn.pipe(
+            s.element,
+            loop,
+            wrap,
+          )
       case Tag.tuple:
-        return !z.tuple.is(s) ? fn.throw("In `reify`, expected a tuple schema, got:", s) : fn.pipe(
-          s.items,
-          map(k),
-          wrap,
-        )
+        return !z.tuple.is(s)
+          ? fn.throw("In `reify`, expected a tuple schema, got:", s)
+          : fn.pipe(
+            s.items,
+            map(loop),
+            wrap,
+          )
       case Tag.object:
-        return !z.object.is(s) ? fn.throw("In `reify`, expected an object schema, got:", s) : fn.pipe(
-          s.shape,
-          map(k),
-          wrap,
-        )
+        return !z.object.is(s)
+          ? fn.throw("In `reify`, expected an object schema, got:", s)
+          : fn.pipe(
+            s.shape,
+            map(loop),
+            wrap,
+          )
       case Tag.union:
-        return !z.union.is(s) ? fn.throw("In `reify`, expected a union schema, got:", s) : fn.pipe(
-          s.options,
-          map(k),
-          wrap,
-        )
+        return !z.union.is(s)
+          ? fn.throw("In `reify`, expected a union schema, got:", s)
+          : fn.pipe(
+            z.union.get(s),
+            map(loop),
+            wrap,
+          )
       case Tag.intersection:
-        return !isIntersection(s) ? fn.throw("In `reify`, expected an intersection schema, got:", s) : fn.pipe(
-          [k(s._def.left), k(s._def.right)],
-          wrap,
-        )
+        return !isIntersection(s)
+          ? fn.throw("In `reify`, expected an intersection schema, got:", s)
+          : fn.pipe(
+            [loop(s._def.left), loop(s._def.right)],
+            wrap,
+          )
       case Tag.literal:
-        return !z.literal.is(s) ? fn.throw("In `reify`, expected a literal schema, got:", s) : fn.pipe(
-          [Tag.literal, s.value]
-        )
+        return !z.literal.is(s)
+          ? fn.throw("In `reify`, expected a literal schema, got:", s)
+          : fn.pipe([Tag.literal, z.literal.get(s)])
       default: return fn.throw(s)
     }
   })
-  return go(schema)
+  return loop(schema)
 }
