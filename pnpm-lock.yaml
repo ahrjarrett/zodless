@@ -8,8 +8,11 @@ importers:
 
   .:
     dependencies:
+      '@typescript/vfs':
+        specifier: 1.5.2
+        version: 1.5.2
       zod:
-        specifier: ^3.23.8
+        specifier: ^3.0.0
         version: 3.23.8
     devDependencies:
       '@arktype/attest':
@@ -22,8 +25,14 @@ importers:
         specifier: ^20.14.0
         version: 20.14.0
       any-ts:
-        specifier: ^0.45.0
-        version: 0.45.0
+        specifier: ^0.45.1
+        version: 0.45.1
+      fast-check:
+        specifier: ^3.19.0
+        version: 3.19.0
+      lz-string:
+        specifier: ^1.5.0
+        version: 1.5.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -390,6 +399,9 @@ packages:
   '@typescript/vfs@1.5.0':
     resolution: {integrity: sha512-AJS307bPgbsZZ9ggCT3wwpg3VbTKMFNHfaY/uF0ahSkYYrPF2dSSKDNIDIQAHm9qJqbLvCsSJH7yN4Vs/CsMMg==}
 
+  '@typescript/vfs@1.5.2':
+    resolution: {integrity: sha512-RDp35jQj3/T5hiV8XQm6PDReqDoI8XI/dricpksgZ3LBlp4JUsL6AtKBXCOw5sdvvjrCtIrHONbVJz5row+IfQ==}
+
   '@vitest/expect@1.6.0':
     resolution: {integrity: sha512-ixEvFVQjycy/oNgHjqsL6AZCDduC+tflRluaHIzKIsdbzkLn2U/iBnVeJwB6HsIjQBdfMR8Z0tRxKUsvFJEeWQ==}
 
@@ -434,8 +446,8 @@ packages:
     resolution: {integrity: sha512-Cxwpt2SfTzTtXcfOlzGEee8O+c+MmUgGrNiBcXnuWxuFJHe6a5Hz7qwhwe5OgaSYI0IJvkLqWX1ASG+cJOkEiA==}
     engines: {node: '>=10'}
 
-  any-ts@0.45.0:
-    resolution: {integrity: sha512-kEfrnxHhMuVKmcfT0iENdvELHWTVR6nLXaiDtJu9j2K1sI6H1PAzPtI8KSeL9DzriQvjuxcm1fbKv5WAGvf/6Q==}
+  any-ts@0.45.1:
+    resolution: {integrity: sha512-TLB4NxVqXe3RpSWw4OGliLfGkyfBiEu8N8VZEQouIkmsuhCCWvkXS0UlZPxzia4B4qgVEwcVLyQCpowguYCVaQ==}
 
   argparse@1.0.10:
     resolution: {integrity: sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==}
@@ -697,6 +709,10 @@ packages:
   external-editor@3.1.0:
     resolution: {integrity: sha512-hMQ4CX1p1izmuLYyZqLMO/qGNw10wSv9QDCPfzXfyFrOaCSSoRfqE1Kf1s5an66J5JZC62NewG+mK49jOCtQew==}
     engines: {node: '>=4'}
+
+  fast-check@3.19.0:
+    resolution: {integrity: sha512-CO2JX/8/PT9bDGO1iXa5h5ey1skaKI1dvecERyhH4pp3PGjwd3KIjMAXEg79Ps9nclsdt4oPbfqiAnLU0EwrAQ==}
+    engines: {node: '>=8.0.0'}
 
   fast-glob@3.3.2:
     resolution: {integrity: sha512-oX2ruAFQwf/Orj8m737Y5adxDQO0LAB7/S5MnxCdTNDd4p6BsyIVsv9JQsATbTSq8KHRpLwIHbVlUNatxd+1Ow==}
@@ -1008,6 +1024,10 @@ packages:
   lru-cache@4.1.5:
     resolution: {integrity: sha512-sWZlbEP2OsHNkXrMl5GYk/jKk70MBng6UU4YI/qGDYbgf6YbP4EvmqISbXCoJiRKs+1bSpFHVgQxvJ17F2li5g==}
 
+  lz-string@1.5.0:
+    resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
+    hasBin: true
+
   magic-string@0.30.10:
     resolution: {integrity: sha512-iIRwTIf0QKV3UAnYK4PU8uiEc4SRh5jX0mwpIwETPpHdhVM4f53RSwS/vXvN1JhGX+Cs7B8qIq3d6AH49O5fAQ==}
 
@@ -1192,6 +1212,9 @@ packages:
 
   pseudomap@1.0.2:
     resolution: {integrity: sha512-b/YwNhb8lk1Zz2+bXXpS/LK9OisiZZ1SNsSLxN1x2OXVEhW2Ckr/7mWE5vrC1ZTiJlD9g19jWszTmJsB+oEpFQ==}
+
+  pure-rand@6.1.0:
+    resolution: {integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==}
 
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
@@ -2030,6 +2053,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@typescript/vfs@1.5.2':
+    dependencies:
+      debug: 4.3.5
+    transitivePeerDependencies:
+      - supports-color
+
   '@vitest/expect@1.6.0':
     dependencies:
       '@vitest/spy': 1.6.0
@@ -2077,7 +2106,7 @@ snapshots:
 
   ansi-styles@5.2.0: {}
 
-  any-ts@0.45.0: {}
+  any-ts@0.45.1: {}
 
   argparse@1.0.10:
     dependencies:
@@ -2440,6 +2469,10 @@ snapshots:
       iconv-lite: 0.4.24
       tmp: 0.0.33
 
+  fast-check@3.19.0:
+    dependencies:
+      pure-rand: 6.1.0
+
   fast-glob@3.3.2:
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -2737,6 +2770,8 @@ snapshots:
       pseudomap: 1.0.2
       yallist: 2.1.2
 
+  lz-string@1.5.0: {}
+
   magic-string@0.30.10:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.15
@@ -2910,6 +2945,8 @@ snapshots:
       react-is: 18.3.1
 
   pseudomap@1.0.2: {}
+
+  pure-rand@6.1.0: {}
 
   queue-microtask@1.2.3: {}
 

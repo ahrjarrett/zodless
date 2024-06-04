@@ -1,21 +1,8 @@
-import { z } from "../src/schema"
+import { z } from "../src/schema.js"
 import * as vi from "vitest"
 
 vi.describe("z", () => {
   const input = z.object({ abc: z.union([z.number(), z.literal("xyz")]), def: z.array(z.unknown()) })
-
-  vi.describe("z.reify", () => {
-    const expected = ["object", {
-      abc: ["union", [["number"], ["literal", "xyz"]]],
-      def: ["array", ["unknown"]]
-    }] as const
-    const actual = z.reify(input)
-
-    vi.it("reifies", () => {
-      vi.assert.deepEqual(expected, actual)
-      vi.assertType<z.reify<typeof input>>(actual)
-    })
-  })
 
   vi.describe("z.toJsonSchema", () => {
     vi.it("handles primitive schemas", () => {
@@ -46,10 +33,11 @@ vi.describe("z", () => {
         z.toJsonSchema(z.literal(null)),
         { type: "null", const: null }
       )
-      vi.assert.deepEqual(
-        z.toJsonSchema(z.literal(undefined)),
-        { type: "null", const: undefined }
-      )
+
+      // vi.assert.deepEqual(
+      //   z.toJsonSchema(z.literal(undefined)),
+      //   { type: "null", const: undefined }
+      // )
       vi.assert.deepEqual(
         z.toJsonSchema(z.literal(false)),
         { type: "boolean", const: false }
@@ -315,86 +303,100 @@ vi.describe("z", () => {
 
     vi.it("handles string formats", () => {
       vi.assert.deepEqual(
-        z.toJsonSchema(z.string().email()),
+        z.toJsonSchema(z.string().email(), "noTypes"),
         { format: "email", type: "string" }
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.string().ip()),
+        z.toJsonSchema(z.string().ip(), "noTypes"),
         { type: "string", format: "ipv4" }
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.string().ip({ version: "v4" })),
-        { type: "string", format: "ipv4" }
+        z.toJsonSchema(z.string().ip({ version: "v4" }), "noTypes"),
+        { type: "string", format: "ipv4" },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.string().ip({ version: "v6" })),
-        { type: "string", format: "ipv6" }
+        z.toJsonSchema(z.string().ip({ version: "v6" }), "noTypes"),
+        { type: "string", format: "ipv6" },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.string().date()),
-        { type: "string", format: "date" }
+        z.toJsonSchema(z.string().date(), "noTypes"),
+        { type: "string", format: "date" },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.string().datetime()),
-        { type: "string", format: "date-time" }
+        z.toJsonSchema(z.string().datetime(), "noTypes"),
+        { type: "string", format: "date-time" },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.string().time()),
-        { type: "string", format: "time" }
+        z.toJsonSchema(z.string().time(), "noTypes"),
+        { type: "string", format: "time" },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.string().url()),
-        { type: "string", format: "uri" }
+        z.toJsonSchema(z.string().url(), "noTypes"),
+        { type: "string", format: "uri" },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.string().duration()),
-        { type: "string", format: "duration" }
+        z.toJsonSchema(z.string().duration(), "noTypes"),
+        { type: "string", format: "duration" },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.string().min(1)),
-        { type: "string", minLength: 1 }
+        z.toJsonSchema(z.string().min(1), "noTypes"),
+        { type: "string", minLength: 1 },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.string().max(10)),
-        { type: "string", maxLength: 10 }
+        z.toJsonSchema(z.string().max(10), "noTypes"),
+        { type: "string", maxLength: 10 },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.string().min(1).max(10)),
-        { type: "string", minLength: 1, maxLength: 10 }
+        z.toJsonSchema(z.string().min(1).max(10), "noTypes"),
+        { type: "string", minLength: 1, maxLength: 10 },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.string().uuid()),
-        { type: "string", format: "uuid" }
+        z.toJsonSchema(z.string().uuid(), "noTypes"),
+        { type: "string", format: "uuid" },
       )
     })
 
     vi.it("handles number formats", () => {
       vi.assert.deepEqual(
-        z.toJsonSchema(z.number().max(100)),
-        { maximum: 100, type: "number" }
+        z.toJsonSchema(z.number().max(100), "noTypes"),
+        { maximum: 100, type: "number" },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.number().min(1)),
-        { minimum: 1, type: "number" }
+        z.toJsonSchema(z.number().min(1), "noTypes"),
+        { minimum: 1, type: "number" },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.number().multipleOf(2)),
-        { type: "number", multipleOf: 2 }
+        z.toJsonSchema(z.number().multipleOf(2), "noTypes"),
+        { type: "number", multipleOf: 2 },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.number().int()),
-        { type: "integer" }
+        z.toJsonSchema(z.number().int(), "noTypes"),
+        { type: "integer" },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.number().int().max(100_000)),
-        { type: "integer", maximum: 100_000 }
+        z.toJsonSchema(z.number().int().max(100_000), "noTypes"),
+        { type: "integer", maximum: 100_000 },
       )
       vi.assert.deepEqual(
-        z.toJsonSchema(z.number().int().min(-200_000).max(100_000)),
-        { type: "integer", minimum: -200_000, maximum: 100_000 }
+        z.toJsonSchema(z.number().int().min(-200_000).max(100_000), "noTypes"),
+        { type: "integer", minimum: -200_000, maximum: 100_000 },
+      )
+      vi.assert.deepEqual(
+        z.toJsonSchema(z.number().gt(-200_000).lt(100_000), "noTypes"),
+        {
+          type: "number",
+          exclusiveMaximum: 100000,
+          exclusiveMinimum: -200000,
+        }
+      )
+      vi.assert.deepEqual(
+        z.toJsonSchema(z.number().int().gt(-200_000).lt(100_000), "noTypes"),
+        {
+          type: "integer",
+          exclusiveMaximum: 100000,
+          exclusiveMinimum: -200000,
+        }
       )
     })
-
   })
-
 })

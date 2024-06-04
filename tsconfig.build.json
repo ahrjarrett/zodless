@@ -1,5 +1,5 @@
 {
-  "include": ["setupVitest.ts", "src", "test"],
+  "include": ["setupVitest.ts", "src"],
   "compilerOptions": {
     "target": "ESNext",
     "module": "NodeNext",
