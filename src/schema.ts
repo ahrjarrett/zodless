@@ -536,7 +536,6 @@ declare namespace z {
     record_ as record,
     string_ as string,
     symbol_ as symbol,
-    transformer_ as transformer,
     tuple_ as tuple,
     undefined_ as undefined,
     union_ as union,
@@ -596,6 +595,7 @@ declare namespace z {
     set,
     setErrorMap,
     strictObject,
+    transformer,
     typeToFlattenedError,
     typecast,
     util,
@@ -642,7 +642,6 @@ namespace z {
   z.readonly = readonly_
   z.record = record_
   z.string = string_
-  z.transformer = transformer_
   z.tuple = tuple_
   z.undefined = undefined_
   z.union = union_
@@ -839,7 +838,6 @@ namespace enum_ {
     : <T extends nonempty.mut.array<string>>(u: unknown) => u is ZodEnum<T>
     = (u): u is never => hasTypeName(u, ZodTag.ZodEnum)
 }
-
 
 type void_ = never | ZodVoid
 function void_(params?: RawCreateParams) { return Z.void(params) }
@@ -1216,21 +1214,10 @@ type primitive<
   | ZodUndefined
 > = type
 
-function primitive() { }
+function primitive(params?: RawCreateParams) { return Z.union([Z.string(), Z.number(), Z.boolean(), Z.null(), Z.undefined(), Z.bigint()], params) }
 namespace primitive {
-  export const is = (u: object): u is z.primitive => hasTypeName(u, ...primitiveTypeNames)
+  export const is = (u: unknown): u is z.primitive => hasTypeName(u, ...primitiveTypeNames)
 }
-
-type transformer_<S extends z.any = z.any, O = S["_output"], I = S["_input"]> = Z.ZodTransformer<S, O, I>
-function transformer_<I extends z.any>(schema: I, effect: Effect<I["_output"]>, params?: RawCreateParams) {
-  return Z.transformer(schema, effect, params)
-}
-namespace transformer_ {
-  export const is
-    : <S extends z.any, O, I>(u: unknown) => u is Z.ZodTransformer<S, O, I>
-    = (u): u is never => u instanceof Z.ZodTransformer
-}
-
 
 type effect_<schema extends z.any = z.any> = ZodEffects<schema, schema["_output"], schema["_input"]>
 function effect_
