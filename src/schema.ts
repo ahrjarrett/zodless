@@ -1,4 +1,4 @@
-import { array, fn, map, object } from "./util.js"
+import { array, fn, object } from "./util.js"
 import { toJsonSchema } from "./toJsonSchema.js"
 import { reify } from "./reify.js"
 
@@ -241,7 +241,7 @@ import {
   z as Z,
 } from "zod"
 
-import type { any, mut, nonempty } from "any-ts"
+import type { any, mut, nonempty, some } from "any-ts"
 
 export { z }
 
@@ -370,11 +370,6 @@ namespace intersection_ {
     = (schema) => schema._def.right
     ;
 }
-
-type JsonSchema =
-  | { type: string }
-  | readonly JsonSchema[]
-  | { [x: string]: JsonSchema }
 
 declare namespace z {
   export type {
@@ -514,8 +509,9 @@ declare namespace z {
     issues,
     primitive,
     typeName,
-    ZodTag as tag,
     toJsonSchema,
+    reify,
+    ZodTag as tag,
   }
 
   export {
@@ -527,6 +523,8 @@ declare namespace z {
     discriminatedUnion_ as disjoint,
     effect_ as effect,
     enum_ as enum,
+    function_ as function,
+    instanceof_ as instanceof,
     intersection_ as intersection,
     literal_ as literal,
     map_ as map,
@@ -537,10 +535,12 @@ declare namespace z {
     readonly_ as readonly,
     record_ as record,
     string_ as string,
+    symbol_ as symbol,
     tuple_ as tuple,
     undefined_ as undefined,
     union_ as union,
     unknown_ as unknown,
+    void_ as void,
   }
 
   export {
@@ -595,9 +595,6 @@ declare namespace z {
     set,
     setErrorMap,
     strictObject,
-    /** TODO: wrap `z.symbol` */
-    symbol,
-    /** TODO: wrap `z.transformer` */
     transformer,
     typeToFlattenedError,
     typecast,
@@ -627,15 +624,16 @@ namespace z {
   z.array = array_
   z.boolean = boolean_
   z.bigint = bigint_
+  z.date = date_
   z.discriminatedUnion = discriminatedUnion_
   z.disjoint = discriminatedUnion_
-  /** TODO: write `toJsonSchema` handler for `z.effect` */
   z.effect = effect_
   /** TODO: write `toJsonSchema` handler for `z.enum` */
   z.enum = enum_
+  z.function = function_
   z.intersection = intersection_
+  z.instanceof = instanceof_
   z.literal = literal_
-  /** TODO: write `toJsonSchema` handler for `z.map` */
   z.map = map_
   z.null = null_
   z.number = number_
@@ -647,8 +645,12 @@ namespace z {
   z.tuple = tuple_
   z.undefined = undefined_
   z.union = union_
+  z.symbol = symbol_
+  z.void = void_
   /** TODO: write `toJsonSchema` handler for `z.unknown` */
   z.unknown = unknown_
+
+  // custom helpers, schemas, etc.
   z.tag = ZodTag
   z.typeName = typeName
   z.issue = issue
@@ -658,16 +660,14 @@ namespace z {
   z.primitive = primitive
   /// interpreters
   z.toJsonSchema = toJsonSchema
+  z.reify = reify
 
-  z.symbol = symbol
   z.addIssueToContext = addIssueToContext
   z.coerce = coerce
   z.custom = custom
-  z.date = date
   z.defaultErrorMap = defaultErrorMap
   z.getErrorMap = getErrorMap
   z.getParsedType = getParsedType
-  z.intersection = intersection_
   z.isAborted = isAborted
   z.isAsync = isAsync
   z.isDirty = isDirty
@@ -689,7 +689,6 @@ namespace z {
   z.set = set
   z.setErrorMap = setErrorMap
   z.strictObject = strictObject
-  z.transformer = transformer
   z.util = util
 }
 
@@ -833,6 +832,48 @@ namespace array_ {
 type enum_<T extends nonempty.array<string>> = never | ZodEnum<{ -readonly [k in keyof T]: T[k] }>
 function enum_
   <const SS extends nonempty.array<string>>(values: SS, params?: RawCreateParams): z.enum<SS> { return Z.enum(values, params) }
+
+namespace enum_ {
+  export const is
+    : <T extends nonempty.mut.array<string>>(u: unknown) => u is ZodEnum<T>
+    = (u): u is never => hasTypeName(u, ZodTag.ZodEnum)
+}
+
+type void_ = never | ZodVoid
+function void_(params?: RawCreateParams) { return Z.void(params) }
+namespace void_ {
+  export const is
+    : any.typeguard<unknown, ZodVoid>
+    = (u): u is never => hasTypeName(u, ZodTag.ZodVoid)
+}
+
+type symbol_ = never | ZodSymbol
+function symbol_(params?: RawCreateParams) { return Z.symbol(params) }
+namespace symbol_ {
+  export const is
+    : any.typeguard<unknown, ZodSymbol>
+    = (u): u is never => hasTypeName(u, ZodTag.ZodSymbol)
+}
+
+type date_ = never | ZodDate
+function date_(params?: RawCreateParams) { return Z.date(params) }
+declare namespace date_ {
+  export type arguments = never | (
+    & {
+      errorMap?: ZodErrorMap
+      invalid_type_error?: string
+      required_error?: string
+      message?: string
+      description?: string
+    }
+    & { coerce?: boolean }
+  )
+}
+namespace date_ {
+  export const is
+    : any.typeguard<unknown, ZodSymbol>
+    = (u): u is never => hasTypeName(u, ZodTag.ZodDate)
+}
 
 type boolean_ = never | ZodBoolean
 function boolean_
@@ -1110,6 +1151,74 @@ namespace literal_ {
     = (u): u is never => hasTypeName(u, ZodTag.ZodLiteral)
 }
 
+interface CustomParams extends CustomErrorParams { fatal?: boolean }
+
+type instanceof_<T extends some.class<any>> = ZodType<globalThis.InstanceType<T>, ZodTypeDef, globalThis.InstanceType<T>>
+function instanceof_<T extends some.class<any>>(class_: T, params?: CustomParams) { return Z.instanceof(class_, params) }
+// namespace instanceof_ {
+/** TODO: is there a way to write a typeguard for `z.instanceof`? without a tag, will require some creativity */
+// export const is
+// }
+
+type function_ = typeof Z.function
+function function_(): ZodFunction<ZodTuple<[], ZodUnknown>, ZodUnknown>
+function function_<T extends AnyZodTuple = ZodTuple<[], ZodUnknown>>(args: T): ZodFunction<T, ZodUnknown>
+function function_<T extends AnyZodTuple, U extends ZodTypeAny>(args: T, returns: U): ZodFunction<T, U>
+function function_<T extends AnyZodTuple = ZodTuple<[], ZodUnknown>, U extends ZodTypeAny = ZodUnknown>(args: T, returns: U, params?: RawCreateParams): ZodFunction<T, U>
+function function_(
+  ...args:
+    | []
+    | [args: ZodTuple<[], ZodUnknown>]
+    | [args: z.any.tuple, returns: z.any, params?: RawCreateParams]
+): unknown {
+  return args.length === 0 ? Z.function()
+    : args.length === 1 ? Z.function(...args)
+      : Z.function(...args)
+}
+declare namespace function_ {
+  export { any_ as any }
+  export type any_ = Z.ZodFunction<ZodTuple<any, any>, z.any>
+}
+namespace function_ {
+  export const is
+    : <I extends ZodTuple<any, any>, O extends z.any>(u: unknown) => u is ZodFunction<I, O>
+    = (u): u is never => hasTypeName(u, ZodTag.ZodFunction)
+    ;
+  export const get
+    : <I extends ZodTuple<any, any>, O extends z.any>(schema: ZodFunction<I, O>) => [args: I, returns: O]
+    = (schema) => [schema._def.args, schema._def.returns]
+    ;
+  export const getArguments
+    : <I extends ZodTuple<any, any>>(schema: ZodFunction<I, z.any>) => I
+    = (schema) => schema._def.args
+    ;
+  export const getReturn
+    : <O extends z.any>(schema: ZodFunction<any, O>) => O
+    = (schema) => schema._def.returns
+    ;
+}
+
+type primitive<
+  type extends
+  | ZodString
+  | ZodNumber
+  | ZodBoolean
+  | ZodNull
+  | ZodUndefined
+  | ZodBigInt
+  = ZodString
+  | ZodNumber
+  | ZodBoolean
+  | ZodNull
+  | ZodBigInt
+  | ZodUndefined
+> = type
+
+function primitive(params?: RawCreateParams) { return Z.union([Z.string(), Z.number(), Z.boolean(), Z.null(), Z.undefined(), Z.bigint()], params) }
+namespace primitive {
+  export const is = (u: unknown): u is z.primitive => hasTypeName(u, ...primitiveTypeNames)
+}
+
 type effect_<schema extends z.any = z.any> = ZodEffects<schema, schema["_output"], schema["_input"]>
 function effect_
   <S extends z.any>(schema: S, effect: Effect<S["_output"]>, params?: RawCreateParams): ZodEffects<S, S["_output"], S["_input"]> { return Z.effect(schema, effect) }
@@ -1149,25 +1258,4 @@ namespace issues {
 namespace error {
   export const schema = Z.object({ issues: issues.schema })
   export const is = Guard.fromSchema(error.schema)
-}
-
-type primitive<
-  type extends
-  | ZodString
-  | ZodNumber
-  | ZodBoolean
-  | ZodNull
-  | ZodUndefined
-  | ZodBigInt
-  = ZodString
-  | ZodNumber
-  | ZodBoolean
-  | ZodNull
-  | ZodBigInt
-  | ZodUndefined
-> = type
-
-function primitive() { }
-namespace primitive {
-  export const is = (u: object): u is z.primitive => hasTypeName(u, ...primitiveTypeNames)
 }
