@@ -1,5 +1,16 @@
 # zodless
 
+## 0.0.5
+
+### Patch Changes
+
+- 6277ad1: feat: adds support for:
+  - `z.date`
+  - `z.void`
+  - `z.function`
+  - `z.instanceof`
+  - `z.enum`
+
 ## 0.0.4
 
 ### Patch Changes
