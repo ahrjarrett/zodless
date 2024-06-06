@@ -519,6 +519,7 @@ declare namespace z {
     array_ as array,
     bigint_ as bigint,
     boolean_ as boolean,
+    date_ as date,
     discriminatedUnion_ as discriminatedUnion,
     discriminatedUnion_ as disjoint,
     effect_ as effect,
@@ -548,8 +549,6 @@ declare namespace z {
     coerce,
     /** TODO: wrap `z.custom` */
     custom,
-    /** TODO: wrap `z.lazy` */
-    date,
     defaultErrorMap,
     deoptional,
     getErrorMap,
