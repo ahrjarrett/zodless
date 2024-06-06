@@ -529,8 +529,10 @@ declare namespace z {
     intersection_ as intersection,
     literal_ as literal,
     map_ as map,
+    never_ as never,
     number_ as number,
     null_ as null,
+    nullable_ as nullable,
     object_ as object,
     optional_ as optional,
     readonly_ as readonly,
@@ -567,13 +569,9 @@ declare namespace z {
     makeIssue,
     mergeTypes,
     nan,
-    /** TODO: wrap `z.lazy` */
+    /** TODO: wrap `z.nativeEnum` */
     nativeEnum,
-    /** TODO: wrap `z.lazy` */
-    never,
     noUnrecognized,
-    /** TODO: wrap `z.nullable` */
-    nullable,
     objectInputType,
     objectOutputType,
     objectUtil,
@@ -634,7 +632,9 @@ namespace z {
   z.instanceof = instanceof_
   z.literal = literal_
   z.map = map_
+  z.never = never_
   z.null = null_
+  z.nullable = nullable_
   z.number = number_
   z.object = object_
   z.optional = optional_
@@ -676,8 +676,6 @@ namespace z {
   z.makeIssue = makeIssue
   z.nan = nan
   z.nativeEnum = nativeEnum
-  z.never = never
-  z.nullable = nullable
   z.oboolean = oboolean
   z.onumber = onumber
   z.ostring = ostring
@@ -720,7 +718,6 @@ declare namespace new_ {
 }
 
 
-function any_(params?: RawCreateParams): ZodAny { return Z.any(params) }
 type any_<type extends ZodTypeAny = ZodTypeAny> = type
 declare namespace any_ {
   export { primitive }
@@ -769,6 +766,13 @@ declare namespace any_ {
     | [z.any, z.any, ...z.any[]]
     = [z.any, z.any, ...z.any[]]
   > = type
+}
+
+function any_(params?: RawCreateParams): ZodAny { return Z.any(params) }
+namespace any_ {
+  export const is
+    : (u: unknown) => u is ZodAny
+    = (u: unknown): u is never => hasTypeName(u, ZodTag.ZodAny)
 }
 
 type hasTypeName<typeName extends z.tag = z.tag> = never | { _def: { typeName: typeName } }
@@ -820,6 +824,14 @@ namespace typeName {
   export const has = hasTypeName
   export const get = getTypeName
   export const softGet = softGetTypeName
+}
+
+type never_ = never | ZodNever
+function never_(params?: RawCreateParams) { Z.never(params) }
+namespace never_ {
+  export const is
+    : any.typeguard<unknown, ZodNever>
+    = (u: unknown): u is never => hasTypeName(u, ZodTag.ZodNever)
 }
 
 type array_<schema extends z.any = z.any> = never | ZodArray<schema, "many">
@@ -977,6 +989,20 @@ namespace null_ {
   export const is
     : any.typeguard<object, ZodNull>
     = (u): u is ZodNull => hasTypeName(u, ZodTag.ZodNull)
+}
+
+type nullable_<schema extends z.any = z.any> = never | ZodNullable<schema>
+function nullable_<S extends z.any>(schema: S, params?: RawCreateParams): ZodNullable<S> { return Z.nullable(schema, params) }
+declare namespace nullable_ {
+  type get<schema extends z.nullable<z.any>> = schema["_def"]["innerType"]
+}
+namespace nullable_ {
+  export const is
+    : <S extends z.any>(u: unknown) => u is ZodNullable<S>
+    = (u): u is never => hasTypeName(u, ZodTag.ZodNullable)
+  export const get
+    : <S extends z.any>(schema: z.nullable<S>) => S
+    = (schema) => schema._def.innerType
 }
 
 type undefined_ = never | ZodUndefined
