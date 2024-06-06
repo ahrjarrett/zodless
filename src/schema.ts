@@ -726,11 +726,16 @@ type any_<type extends ZodTypeAny = ZodTypeAny> = type
 declare namespace any_ {
   export { primitive }
   export { object_ as object }
-  export type object_<type extends AnyZodObject = AnyZodObject> = type
+  export type object_<
+    type extends
+    | z.object<z.any.shape, z.object.excess, z.any>
+    = z.object<z.any.shape, z.object.excess, z.any>
+  > = type
+
   export type array<type extends ZodArray<any> = ZodArray<any>> = type
   export type tuple<type extends AnyZodTuple = AnyZodTuple> = type
   export type union<type extends z.union.new = z.union.new> = type
-  export type shape<type extends ZodRawShape = ZodRawShape> = type
+  export type shape<type extends any.dict<z.any> = any.dict<z.any>> = type
   export type key<type extends KeySchema = KeySchema> = type
   export type intersection<
     type extends
@@ -821,22 +826,32 @@ namespace typeName {
 type array_<schema extends z.any = z.any> = never | ZodArray<schema, "many">
 function array_<S extends z.any>(schema: S, params?: RawCreateParams): z.array<S> { return Z.array(schema, params) }
 declare namespace array_ {
-  type get<type extends z.array> = type["_def"]["type"]
+  type get<schema extends z.array> = schema["_def"]["type"]
 }
 namespace array_ {
-  export const get: <S extends z.any>(xs: ZodArray<S>) => S = (xs) => xs._def.type
-  export const is: <T extends z.any>(u: unknown) => u is ZodArray<T> = (u: unknown): u is never =>
-    hasTypeName(u, ZodTag.ZodArray)
+  export const is
+    : <T extends z.any>(u: unknown) => u is ZodArray<T>
+    = (u: unknown): u is never => hasTypeName(u, ZodTag.ZodArray)
+  export const get
+    : <S extends z.any>(xs: ZodArray<S>) => S
+    = (xs) => xs._def.type
 }
 
-type enum_<T extends nonempty.array<string>> = never | ZodEnum<{ -readonly [k in keyof T]: T[k] }>
+type enum_<members extends nonempty.array<string> = nonempty.array<string>>
+  = never | ZodEnum<{ -readonly [k in keyof members]: members[k] }>
 function enum_
-  <const SS extends nonempty.array<string>>(values: SS, params?: RawCreateParams): z.enum<SS> { return Z.enum(values, params) }
+  <const T extends nonempty.array<string>>(values: T, params?: RawCreateParams): z.enum<T> { return Z.enum(values, params) }
 
+declare namespace enum_ {
+  type get<schema extends z.enum> = schema["options"]
+}
 namespace enum_ {
   export const is
     : <T extends nonempty.mut.array<string>>(u: unknown) => u is ZodEnum<T>
     = (u): u is never => hasTypeName(u, ZodTag.ZodEnum)
+  export const get
+    : <T extends nonempty.mut.array<string>>(schema: z.enum<T>) => T
+    = (schema) => schema.options
 }
 
 type void_ = never | ZodVoid
@@ -856,7 +871,7 @@ namespace symbol_ {
 }
 
 type date_ = never | ZodDate
-function date_(params?: RawCreateParams) { return Z.date(params) }
+function date_(params?: date_.arguments) { return Z.date(params) }
 declare namespace date_ {
   export type arguments = never | (
     & {
@@ -975,7 +990,6 @@ namespace undefined_ {
 type unknown_ = never | ZodUnknown
 function unknown_
   (params?: RawCreateParams) { return Z.unknown(params) }
-
 namespace unknown_ {
   export const is
     : any.typeguard<object, ZodUnknown>
@@ -985,25 +999,28 @@ namespace unknown_ {
 type optional_<schema extends z.any = z.any> = ZodOptional<schema>
 function optional_<S extends z.any>(type: S, params?: RawCreateParams): ZodOptional<S> { return Z.optional(type, params) }
 declare namespace optional_ {
-  type get<type extends z.optional> = type["_def"]["innerType"]
+  type get<schema extends z.optional> = schema["_def"]["innerType"]
 }
 namespace optional_ {
-  export const get: <T extends z.any>(t: ZodOptional<T>) => T = (xs) => xs._def.innerType
-  export const is: <T extends z.any>(u: unknown) => u is ZodOptional<T> = (u): u is never =>
-    hasTypeName(u, ZodTag.ZodOptional)
+  export const get
+    : <S extends z.any>(t: ZodOptional<S>) => S
+    = (xs) => xs._def.innerType
+  export const is
+    : <S extends z.any>(u: unknown) => u is ZodOptional<S>
+    = (u): u is never => hasTypeName(u, ZodTag.ZodOptional)
 }
 
 type readonly_<schema extends z.any = z.any> = ZodReadonly<schema>
 function readonly_<S extends z.any>(type: S): ZodReadonly<S> { return type.readonly() }
 declare namespace readonly_ {
-  type get<type extends z.readonly> = type["_def"]["innerType"]
+  type get<schema extends z.readonly> = schema["_def"]["innerType"]
 }
 namespace readonly_ {
   export const get
-    : <T extends z.any>(type: z.readonly<T>) => T
+    : <S extends z.any>(type: z.readonly<S>) => S
     = (type) => type._def.innerType
   export const is
-    : <T extends z.any>(u: unknown) => u is z.readonly<T>
+    : <S extends z.any>(u: unknown) => u is z.readonly<S>
     = (u): u is never => hasTypeName(u, ZodTag.ZodReadonly)
 }
 
@@ -1036,10 +1053,10 @@ declare namespace record_ {
   export { any_ as any }
   export type any_ = ZodRecord<z.any.key, z.any>
   export type new_ = ZodRecord<ZodString, z.any>
-  export type get<type extends z.record> = type["valueSchema"]["_type"]
-  export type getIndex<type extends z.record> = type["keySchema"]["_type"]
-  export type getEntries<type extends z.record>
-    = [key: type["keySchema"]["_type"], value: type["valueSchema"]["_type"]]
+  export type get<schema extends z.record> = schema["valueSchema"]["_type"]
+  export type getIndex<schema extends z.record> = schema["keySchema"]["_type"]
+  export type getEntries<schema extends z.record>
+    = [key: schema["keySchema"]["_type"], value: schema["valueSchema"]["_type"]]
 }
 namespace record_ {
   export const is
@@ -1056,7 +1073,12 @@ namespace record_ {
     = (record) => [record.keySchema, record.valueSchema]
 }
 
-type object_<shape extends z.any.shape = z.any.shape> = never | ZodObject<shape, "strip", z.any, object_.projectOut<shape>, object_.projectIn<shape>>
+type object_<
+  shape extends z.any.shape = z.any.shape,
+  excess extends z.object.excess = z.object.excess,
+  catchall extends z.any = z.any,
+> = never | ZodObject<shape, excess, catchall, object_.projectOut<shape>, object_.projectIn<shape>>
+
 function object_<S extends z.any.shape>(shape: S, params?: RawCreateParams): object_<S>
 function object_<S extends z.any.shape>(shape: S, params?: RawCreateParams) { return Z.object(shape, params) }
 namespace object_ {
@@ -1064,12 +1086,11 @@ namespace object_ {
     : <T extends { shape: z.any.shape }>(o: T) => T["shape"]
     = (o) => o.shape
   export const is
-    : <T extends z.any.shape, excess extends UnknownKeysParam, catchall extends z.any>(u: unknown) => u is ZodObject<T, excess, catchall>
+    : <T extends z.any.shape, excess extends z.object.excess, catchall extends z.any>(u: unknown) => u is ZodObject<T, excess, catchall>
     = (u): u is never => hasTypeName(u, ZodTag.ZodObject)
 }
 declare namespace object_ {
-  export type fromShape<shape extends z.any.shape> = never |
-    ZodObject<shape, "strip", z.any, projectOut<shape>, projectIn<shape>>
+  export type excess<type extends "passthrough" | "strict" | "strip" = "passthrough" | "strict" | "strip"> = type
 
   export { any_ as any }
   export type any_ = ZodObject<z.any.shape, UnknownKeysParam, z.any, {}, {}>
