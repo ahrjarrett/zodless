@@ -632,6 +632,7 @@ namespace z {
   z.instanceof = instanceof_
   z.literal = literal_
   z.map = map_
+  z.never = never_
   z.null = null_
   z.nullable = nullable_
   z.number = number_
@@ -675,8 +676,6 @@ namespace z {
   z.makeIssue = makeIssue
   z.nan = nan
   z.nativeEnum = nativeEnum
-  z.never = never
-  z.nullable = nullable
   z.oboolean = oboolean
   z.onumber = onumber
   z.ostring = ostring
