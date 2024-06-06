@@ -1,5 +1,11 @@
 # zodless
 
+## 0.0.6
+
+### Patch Changes
+
+- f809ebe: feat: adds z.enum.get
+
 ## 0.0.5
 
 ### Patch Changes
