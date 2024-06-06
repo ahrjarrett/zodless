@@ -1,5 +1,11 @@
 # zodless
 
+## 0.0.8
+
+### Patch Changes
+
+- 31edc8e: feat: adds support for `z.nullable`, `z.never`
+
 ## 0.0.7
 
 ### Patch Changes
