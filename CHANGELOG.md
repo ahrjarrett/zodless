@@ -1,5 +1,11 @@
 # zodless
 
+## 0.0.7
+
+### Patch Changes
+
+- 062f4f2: fix: export `date` namespace instead of `date` schema
+
 ## 0.0.6
 
 ### Patch Changes
